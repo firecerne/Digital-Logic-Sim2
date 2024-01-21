@@ -52,6 +52,8 @@ public class ChipInterfaceEditor : InteractionHandler {
 	Material selectedHandleMat;
 	bool mouseInInputBounds;
 
+	TouchScreenKeyboard keyboard;
+	bool renamingOnTS;
 	// Dragging
 	bool isDragging;
 	float dragHandleStartY;
@@ -110,6 +112,11 @@ public class ChipInterfaceEditor : InteractionHandler {
 			HandleInput ();
 		}
 		DrawSignalHandles ();
+		if(renamingOnTS && keyboard.status == TouchScreenKeyboard.Status.Done && SystemInfo.deviceType == DeviceType.Handheld)
+        {
+			nameField.text = keyboard.text;
+			renamingOnTS = false;
+        }
 	}
 
 	public void LoadSignal (ChipSignal signal) {
@@ -427,6 +434,8 @@ public class ChipInterfaceEditor : InteractionHandler {
 
 	// Select signal (starts dragging, shows rename field)
 	void SelectSignal (ChipSignal signalToDrag) {
+		bool firstTimeOpening = true;
+		
 		// Dragging
 		selectedSignals.Clear ();
 		for (int i = 0; i < signals.Count; i++) {
@@ -452,6 +461,13 @@ public class ChipInterfaceEditor : InteractionHandler {
 		propertiesUI.sizeDelta = new Vector2 (propertiesUI.sizeDelta.x,propertiesHeightMinMax.y);
 		nameField.text = selectedSignals[0].signalName;
 		nameField.Select ();
+		if (SystemInfo.deviceType == DeviceType.Handheld && firstTimeOpening)
+		{
+			keyboard = TouchScreenKeyboard.Open(selectedSignals[0].signalName, TouchScreenKeyboardType.Default, false, false,false,false);
+			firstTimeOpening = false;
+			renamingOnTS = true;
+
+		}
 		nameField.caretPosition = nameField.text.Length;
 		twosComplementToggle.gameObject.SetActive (isGroup);
 		if (selectedSignals[0].pinType == ChipSignal.PinType.Output)
